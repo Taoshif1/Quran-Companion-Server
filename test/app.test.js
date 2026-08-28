@@ -1,5 +1,17 @@
 import request from "supertest";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("../src/config/environment.js", () => ({
+  environment: {
+    port: 5000,
+    clientOrigin: "http://localhost:5173",
+    qfClientId: "",
+    qfClientSecret: "",
+    qfEnvironment: "prelive",
+    isQuranConfigured: false,
+  },
+}));
+
 import { app } from "../src/app.js";
 
 describe("HTTP API", () => {
@@ -24,4 +36,3 @@ describe("HTTP API", () => {
     });
   });
 });
-

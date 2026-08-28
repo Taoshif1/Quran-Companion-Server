@@ -5,11 +5,11 @@ let client;
 
 const serviceEnvironments = {
   prelive: {
-    contentBaseUrl: "https://apis-prelive.quran.foundation",
+    contentBaseUrl: "https://apis-prelive.quran.foundation/content",
     tokenHost: "https://prelive-oauth2.quran.foundation",
   },
   production: {
-    contentBaseUrl: "https://apis.quran.foundation",
+    contentBaseUrl: "https://apis.quran.foundation/content",
     tokenHost: "https://oauth2.quran.foundation",
   },
 };

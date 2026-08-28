@@ -1,11 +1,13 @@
 import { getQuranFoundationClient } from "../../config/quranFoundation.js";
 import { mapChapter, mapTranslationResource, mapVerse } from "./quran.mapper.js";
+import { QuranIntegrityError } from "./quran.errors.js";
+import { validateChapterCollection, validateChapterVerses } from "./quran.integrity.js";
 
 const BENGALI_LANGUAGE_NAMES = new Set(["bengali", "bangla", "বাংলা"]);
 
 export async function listChapters(client = getQuranFoundationClient()) {
   const chapters = await client.content.v4.chapters.list({ language: "en" });
-  return chapters.map(mapChapter);
+  return validateChapterCollection(chapters).map(mapChapter);
 }
 
 export async function listTranslations(language = "bn", client = getQuranFoundationClient()) {
@@ -39,12 +41,25 @@ export async function getChapterContent(
     throw error;
   }
 
-  const verses = await client.content.v4.verses.byChapter(String(chapterId), {
-    translations: [allowedTranslation.id],
-    fields: { textUthmani: true },
-    translationFields: { resourceName: true },
-    perPage: 300,
-  });
+  if (Number(chapter.id) !== Number(chapterId)) {
+    throw new QuranIntegrityError();
+  }
+
+  const pageSize = 50;
+  const pageCount = Math.ceil(chapter.versesCount / pageSize);
+  const pages = await Promise.all(
+    Array.from({ length: pageCount }, (_, index) =>
+      client.content.v4.verses.byChapter(String(chapterId), {
+        translations: [allowedTranslation.id],
+        fields: { chapterId: true, textUthmani: true },
+        translationFields: { resourceName: true },
+        page: index + 1,
+        perPage: pageSize,
+      }),
+    ),
+  );
+  const verses = pages.flat();
+  validateChapterVerses({ chapter, verses, translationId: allowedTranslation.id });
 
   return {
     chapter: mapChapter(chapter),
@@ -52,4 +67,3 @@ export async function getChapterContent(
     verses: verses.map((verse) => mapVerse(verse, allowedTranslation.id)),
   };
 }
-
