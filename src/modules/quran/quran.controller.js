@@ -8,9 +8,9 @@ export async function chaptersController(request, response) {
 
 export async function translationsController(request, response) {
   const language = String(request.query.language || "bn").toLowerCase();
-  if (language !== "bn") {
+  if (!["bn", "en"].includes(language)) {
     return response.status(400).json({
-      error: { code: "UNSUPPORTED_LANGUAGE", message: "Only Bengali resources are available in Phase 1" },
+      error: { code: "UNSUPPORTED_LANGUAGE", message: "Meaning resources are available in Bengali and English" },
     });
   }
   const translations = await listTranslations(language);

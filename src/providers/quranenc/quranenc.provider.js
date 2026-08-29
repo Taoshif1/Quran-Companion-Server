@@ -1,40 +1,29 @@
-const CATALOG_URL = "https://quranenc.com/api/v1/translations/list/bn?localization=en";
 const CHAPTER_URL = "https://quranenc.com/api/v1/translation/sura";
 
-function classify(resource) {
-  const description = `${resource.title || ""} ${resource.description || ""}`.toLowerCase();
-  return /tafsir|tafseer|تفسير|তাফসীর/.test(description) ? "tafsir" : "translation";
-}
+// Direct official API resources verified against all 114 chapters on 2026-08-29.
+// The endpoint has no revision field, so version is an explicit verification
+// snapshot and is never represented as a QuranEnc-published release number.
+export const QURANENC_RESOURCES = Object.freeze([
+  { key: "bengali_zakaria", title: "Bengali Translation - Abu Bakr Zakaria", language: "bn", languageName: "Bengali", classification: "translation", version: "api-2026-08-29", lastVerified: "2026-08-29" },
+  { key: "bengali_rwwad", title: "Bengali Translation - Rowwad Translation Center", language: "bn", languageName: "Bengali", classification: "translation", version: "api-2026-08-29", lastVerified: "2026-08-29" },
+  { key: "bengali_mokhtasar", title: "Bengali Translation of Al-Mukhtasar in Interpreting the Noble Quran", language: "bn", languageName: "Bengali", classification: "tafsir", version: "api-2026-08-29", lastVerified: "2026-08-29" },
+  { key: "english_saheeh", title: "English Translation - Noor International Center", language: "en", languageName: "English", classification: "translation", version: "api-2026-08-29", lastVerified: "2026-08-29" },
+]);
 
-export function mapQuranEncResource(resource) {
-  return {
+export function listQuranEncTranslations(language) {
+  return QURANENC_RESOURCES.filter((resource) => resource.language === language).map((resource) => ({
+    ...resource,
     id: resource.key,
-    key: resource.key,
     name: resource.title,
-    title: resource.title,
-    description: resource.description || null,
-    authorName: null,
-    languageName: "Bengali",
-    language: resource.language_iso_code,
-    version: resource.version,
-    lastUpdate: resource.last_update,
-    classification: classify(resource),
     source: "QuranEnc",
-  };
-}
-
-export async function listQuranEncTranslations(fetcher = fetch) {
-  const response = await fetcher(CATALOG_URL, { headers: { Accept: "application/json" } });
-  if (!response.ok) throw new Error(`QuranEnc catalog unavailable: ${response.status}`);
-  const payload = await response.json();
-  const resources = Array.isArray(payload) ? payload : payload.translations;
-  if (!Array.isArray(resources)) throw new Error("QuranEnc catalog response is invalid");
-  return resources.filter((resource) => resource.language_iso_code === "bn" && resource.key && resource.version).map(mapQuranEncResource);
+    sourceUrl: "https://quranenc.com/en/browse/" + resource.key,
+    versionKind: "verified-api-snapshot",
+  }));
 }
 
 export async function getQuranEncChapter(resource, chapterId, fetcher = fetch) {
-  const response = await fetcher(`${CHAPTER_URL}/${encodeURIComponent(resource.key)}/${chapterId}`, { headers: { Accept: "application/json" } });
-  if (!response.ok) throw new Error(`QuranEnc translation unavailable: ${response.status}`);
+  const response = await fetcher(CHAPTER_URL + "/" + encodeURIComponent(resource.key) + "/" + chapterId, { headers: { Accept: "application/json" } });
+  if (!response.ok) throw new Error("QuranEnc translation unavailable: " + response.status);
   const payload = await response.json();
   const records = Array.isArray(payload) ? payload : payload.result || payload.translations;
   if (!Array.isArray(records)) throw new Error("QuranEnc chapter response is invalid");
