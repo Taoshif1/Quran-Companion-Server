@@ -15,3 +15,11 @@ Tanzil describes its Uthmani text as representing the Medina Mushaf. Quran Compa
 Bengali translations of meaning, when available, are retrieved from [QuranEnc.com](https://quranenc.com/). QuranEnc requires republished translation content to remain unmodified, identify QuranEnc as publisher/source, retain version information, and be kept current with source releases.
 
 Quran Companion keeps translation text and footnotes separate, preserves the selected resource key and version, and never silently substitutes another resource or version.
+
+The direct API does not currently expose a resource revision field. Cached records therefore use an explicit api-YYYY-MM-DD verification snapshot identifier, kept separate from any upstream-published version number.
+
+## Quranic Arabic Corpus (not yet bundled)
+
+Word-study architecture is reserved for the [Quranic Arabic Corpus](https://corpus.quran.com/), current download release 0.4. The official download requires an email address and acceptance of its GNU GPL terms. No Corpus data is bundled in this release, and Word Study remains unavailable until an official source package and its corresponding license/source files are supplied.
+
+The Corpus documentation attributes the annotation text foundation to Tanzil. Quran Companion will keep Corpus annotations separate from its canonical Tanzil Arabic strings.

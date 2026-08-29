@@ -6,9 +6,9 @@ export function listChapters() {
   return listTanzilChapters();
 }
 
-export async function listTranslations(language = "bn", fetcher = fetch) {
-  if (language !== "bn") return [];
-  return listQuranEncTranslations(fetcher);
+export async function listTranslations(language = "bn") {
+  if (!["bn", "en"].includes(language)) return [];
+  return listQuranEncTranslations(language);
 }
 
 function validateTranslation(chapter, records) {
@@ -25,10 +25,10 @@ export async function getChapterContent(chapterId, translationId, fetcher = fetc
   let translationRecords = null;
 
   if (translationId) {
-    const resources = await listTranslations("bn", fetcher);
+    const resources = [...await listTranslations("bn"), ...await listTranslations("en")];
     translationResource = resources.find((resource) => resource.key === translationId);
     if (!translationResource) {
-      const error = new Error("Select a current QuranEnc Bengali resource");
+      const error = new Error("Select a verified QuranEnc resource");
       error.status = 400;
       error.code = "INVALID_TRANSLATION_RESOURCE";
       throw error;
