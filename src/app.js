@@ -15,7 +15,7 @@ export function createApp() {
   app.use("/api", rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: "draft-8" }));
 
   app.get("/api/health", (request, response) => {
-    response.json({ status: "ok", quranSourceConfigured: environment.isQuranConfigured });
+    response.json({ status: "ok", quranSourceConfigured: true, canonicalArabicSource: "Tanzil Project Uthmani v1.1", quranFoundationConfigured: environment.isQuranConfigured });
   });
   app.use("/api/quran", quranRouter);
   app.use(notFoundHandler);
@@ -24,4 +24,3 @@ export function createApp() {
 }
 
 export const app = createApp();
-

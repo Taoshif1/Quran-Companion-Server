@@ -1,69 +1,56 @@
-import { getQuranFoundationClient } from "../../config/quranFoundation.js";
-import { mapChapter, mapTranslationResource, mapVerse } from "./quran.mapper.js";
+import { getQuranEncChapter, listQuranEncTranslations } from "../../providers/quranenc/quranenc.provider.js";
+import { getTanzilChapter, listTanzilChapters } from "../../providers/tanzil/tanzil.provider.js";
 import { QuranIntegrityError } from "./quran.errors.js";
-import { validateChapterCollection, validateChapterVerses } from "./quran.integrity.js";
 
-const BENGALI_LANGUAGE_NAMES = new Set(["bengali", "bangla", "বাংলা"]);
-
-export async function listChapters(client = getQuranFoundationClient()) {
-  const chapters = await client.content.v4.chapters.list({ language: "en" });
-  return validateChapterCollection(chapters).map(mapChapter);
+export function listChapters() {
+  return listTanzilChapters();
 }
 
-export async function listTranslations(language = "bn", client = getQuranFoundationClient()) {
-  const resources = await client.content.v4.resources.translations.list({ language });
-  return resources
-    .filter((resource) => {
-      const name = resource.languageName?.toLowerCase();
-      return language === "bn" ? BENGALI_LANGUAGE_NAMES.has(name) : true;
-    })
-    .map(mapTranslationResource)
-    .filter((resource) => Number.isInteger(resource.id));
+export async function listTranslations(language = "bn", fetcher = fetch) {
+  if (language !== "bn") return [];
+  return listQuranEncTranslations(fetcher);
 }
 
-export async function getChapterContent(
-  chapterId,
-  translationId,
-  client = getQuranFoundationClient(),
-) {
-  const [chapter, translations] = await Promise.all([
-    client.content.v4.chapters.get(String(chapterId), { language: "en" }),
-    listTranslations("bn", client),
-  ]);
-  const allowedTranslation = translations.find(
-    (resource) => resource.id === Number(translationId),
-  );
+function validateTranslation(chapter, records) {
+  if (records.length !== chapter.versesCount) throw new QuranIntegrityError("QuranEnc translation count mismatch");
+  records.forEach((item, index) => {
+    if (item.chapterId !== chapter.id || item.verseNumber !== index + 1 || typeof item.text !== "string" || item.text.length === 0) throw new QuranIntegrityError("QuranEnc translation integrity failure");
+    if (typeof item.footnotes !== "string") throw new QuranIntegrityError("QuranEnc footnote integrity failure");
+  });
+}
 
-  if (!allowedTranslation) {
-    const error = new Error("Select a valid Bengali translation resource");
-    error.status = 400;
-    error.code = "INVALID_TRANSLATION_RESOURCE";
-    throw error;
+export async function getChapterContent(chapterId, translationId, fetcher = fetch) {
+  const local = getTanzilChapter(chapterId);
+  let translationResource = null;
+  let translationRecords = null;
+
+  if (translationId) {
+    const resources = await listTranslations("bn", fetcher);
+    translationResource = resources.find((resource) => resource.key === translationId);
+    if (!translationResource) {
+      const error = new Error("Select a current QuranEnc Bengali resource");
+      error.status = 400;
+      error.code = "INVALID_TRANSLATION_RESOURCE";
+      throw error;
+    }
+    translationRecords = await getQuranEncChapter(translationResource, chapterId, fetcher);
+    validateTranslation(local.chapter, translationRecords);
   }
-
-  if (Number(chapter.id) !== Number(chapterId)) {
-    throw new QuranIntegrityError();
-  }
-
-  const pageSize = 50;
-  const pageCount = Math.ceil(chapter.versesCount / pageSize);
-  const pages = await Promise.all(
-    Array.from({ length: pageCount }, (_, index) =>
-      client.content.v4.verses.byChapter(String(chapterId), {
-        translations: [allowedTranslation.id],
-        fields: { chapterId: true, textUthmani: true },
-        translationFields: { resourceName: true },
-        page: index + 1,
-        perPage: pageSize,
-      }),
-    ),
-  );
-  const verses = pages.flat();
-  validateChapterVerses({ chapter, verses, translationId: allowedTranslation.id });
 
   return {
-    chapter: mapChapter(chapter),
-    translationResource: allowedTranslation,
-    verses: verses.map((verse) => mapVerse(verse, allowedTranslation.id)),
+    chapter: local.chapter,
+    arabicSource: { name: "Tanzil Project", textType: "Uthmani Quran Text", version: "1.1", url: "https://tanzil.net/" },
+    translationResource,
+    verses: local.verses.map((verse, index) => ({
+      ...verse,
+      translation: translationResource ? {
+        resourceId: translationResource.key,
+        resourceName: translationResource.title,
+        resourceVersion: translationResource.version,
+        source: "QuranEnc",
+        text: translationRecords[index].text,
+        footnotes: translationRecords[index].footnotes,
+      } : null,
+    })),
   };
 }

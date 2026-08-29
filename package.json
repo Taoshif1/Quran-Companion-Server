@@ -9,7 +9,8 @@
     "start": "node src/server.js",
     "lint": "eslint .",
     "test": "vitest run",
-    "verify:quran": "node scripts/verify-quran.js"
+    "verify:quran": "node scripts/verify-quran.js",
+    "import:quran": "node scripts/import-quran.js"
   },
   "keywords": [],
   "author": "",

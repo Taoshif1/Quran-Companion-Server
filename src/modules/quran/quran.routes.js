@@ -9,13 +9,9 @@ function validateChapter(request, response, next) {
   if (!Number.isInteger(chapterId) || chapterId < 1 || chapterId > 114) {
     return response.status(400).json({ error: { code: "INVALID_CHAPTER", message: "Chapter ID must be an integer from 1 to 114" } });
   }
-  if (!Number.isInteger(Number(request.query.translationId))) {
-    return response.status(400).json({ error: { code: "TRANSLATION_REQUIRED", message: "A valid translationId is required" } });
-  }
   return next();
 }
 
 quranRouter.get("/chapters", asyncHandler(chaptersController));
 quranRouter.get("/translations", asyncHandler(translationsController));
 quranRouter.get("/chapters/:chapterId", validateChapter, asyncHandler(chapterContentController));
-

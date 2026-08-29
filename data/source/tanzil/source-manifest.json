@@ -1,0 +1,21 @@
+{
+  "source": "Tanzil Project",
+  "textType": "Uthmani",
+  "version": "1.1",
+  "downloadDate": "2026-08-29",
+  "officialSourceUrl": "https://tanzil.net/download/",
+  "sourceFilename": "quran-uthmani-1.1.xml",
+  "sha256": "8c5aeae20363a98f6963720d29fce040ca8b56a8e75f8b564c257fce7f6d0417",
+  "metadata": {
+    "source": "Tanzil Project Quran Metadata",
+    "version": "1.0",
+    "officialSourceUrl": "https://tanzil.net/res/text/metadata/quran-data.xml",
+    "sourceFilename": "quran-data-1.0.xml",
+    "sha256": "8867c1d88191472adec9db694b3cd9f135b1a2ef580574d32cf888dcb22c5c7a"
+  },
+  "structure": {
+    "chapters": 114,
+    "verseRecords": 6236,
+    "verseNumbering": "Tanzil Uthmani source XML"
+  }
+}
