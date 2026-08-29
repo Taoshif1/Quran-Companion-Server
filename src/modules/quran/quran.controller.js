@@ -20,9 +20,8 @@ export async function translationsController(request, response) {
 
 export async function chapterContentController(request, response) {
   const chapterId = Number(request.params.chapterId);
-  const translationId = Number(request.query.translationId);
+  const translationId = request.query.translationId ? String(request.query.translationId) : null;
   const content = await getChapterContent(chapterId, translationId);
   response.set("Cache-Control", "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800");
   response.json({ data: content });
 }
-

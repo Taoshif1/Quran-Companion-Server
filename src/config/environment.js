@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const qfEnvironment = process.env.QF_ENV || "prelive";
 
@@ -18,4 +18,3 @@ export const environment = Object.freeze({
     process.env.QF_CLIENT_ID?.trim() && process.env.QF_CLIENT_SECRET?.trim(),
   ),
 });
-

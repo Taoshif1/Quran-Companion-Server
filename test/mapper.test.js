@@ -44,5 +44,23 @@ describe("Quran response mapper", () => {
     expect(mapped.textUthmani).toBe(source.textUthmani);
     expect(mapped.translation.text).toBe(source.translations[0].text);
   });
-});
 
+  it("does not trim, normalize, remove diacritics, or change punctuation", () => {
+    const arabic = "  وَٱلضُّحَىٰ\u00a0۝  ";
+    const translation = "  বাংলা—পাঠ … <sup foot_note=\"12\">১</sup>\nপরের লাইন  ";
+    const mapped = mapVerse({
+      id: 1,
+      verseKey: "93:1",
+      verseNumber: 1,
+      chapterId: 93,
+      pageNumber: 596,
+      juzNumber: 30,
+      textUthmani: arabic,
+      translations: [{ resourceId: 161, text: translation }],
+    }, 161);
+    expect(mapped.textUthmani).toBe(arabic);
+    expect(mapped.translation.text).toBe(translation);
+    expect([...mapped.textUthmani]).toEqual([...arabic]);
+    expect([...mapped.translation.text]).toEqual([...translation]);
+  });
+});

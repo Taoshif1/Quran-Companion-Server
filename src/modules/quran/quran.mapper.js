@@ -13,6 +13,7 @@ export function mapChapter(chapter) {
   };
 }
 
+
 export function mapTranslationResource(resource) {
   return {
     id: resource.id,
@@ -45,4 +46,3 @@ export function mapVerse(verse, translationId) {
       : null,
   };
 }
-
