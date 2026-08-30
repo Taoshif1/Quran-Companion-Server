@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("../src/config/environment.js", () => ({
   environment: {
     port: 5000,
-    clientOrigin: "http://localhost:5173",
+    clientOrigins: ["http://localhost:5173"],
     qfClientId: "",
     qfClientSecret: "",
     qfEnvironment: "prelive",
@@ -15,6 +15,12 @@ vi.mock("../src/config/environment.js", () => ({
 import { app } from "../src/app.js";
 
 describe("HTTP API", () => {
+  it("GET / describes the API", async () => {
+    const response = await request(app).get("/");
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ name: "Quran Companion API", status: "ok", health: "/api/health" });
+  });
+
   it("GET /api/health returns 200", async () => {
     const response = await request(app).get("/api/health");
     expect(response.status).toBe(200);
@@ -31,5 +37,14 @@ describe("HTTP API", () => {
     const response = await request(app).get("/api/quran/chapters");
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveLength(114);
+  });
+
+  it("allows exact configured origins and rejects other browser origins", async () => {
+    const allowed = await request(app).get("/api/health").set("Origin", "http://localhost:5173");
+    expect(allowed.headers["access-control-allow-origin"]).toBe("http://localhost:5173");
+
+    const rejected = await request(app).get("/api/health").set("Origin", "https://untrusted.example");
+    expect(rejected.status).toBe(200);
+    expect(rejected.headers["access-control-allow-origin"]).toBeUndefined();
   });
 });
