@@ -10,10 +10,18 @@ export function createApp() {
   const app = express();
   app.disable("x-powered-by");
   app.use(helmet());
-  app.use(cors({ origin: environment.clientOrigin }));
+  app.use(cors({
+    origin(origin, callback) {
+      if (!origin || environment.clientOrigins.includes(origin)) return callback(null, true);
+      return callback(null, false);
+    },
+  }));
   app.use(express.json({ limit: "10kb" }));
   app.use("/api", rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: "draft-8" }));
 
+  app.get("/", (request, response) => {
+    response.json({ name: "Quran Companion API", status: "ok", health: "/api/health" });
+  });
   app.get("/api/health", (request, response) => {
     response.json({ status: "ok", quranSourceConfigured: true, canonicalArabicSource: "Tanzil Project Uthmani v1.1", quranFoundationConfigured: environment.isQuranConfigured });
   });
@@ -24,3 +32,4 @@ export function createApp() {
 }
 
 export const app = createApp();
+export default app;
